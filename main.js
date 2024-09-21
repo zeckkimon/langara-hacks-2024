@@ -1,4 +1,3 @@
-
 const State = {
   WAITING_FOR_CALLER_INPUT: 0,
   GENERATING_RESPONSES: 1,
@@ -18,6 +17,7 @@ class ResponseGenerator {
       input: process.stdin,
       output: process.stdout
     });
+    this.googleApiService = new this.googleApiService()
   }
 
   async processCall() {
@@ -56,13 +56,16 @@ class ResponseGenerator {
 
   async generateResponses() {
     console.log("Generating response options...");
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulating processing time
-    // In a real scenario, you'd generate these responses based on the call context
-    this.currentResponses = [
-      "I'm interested in hearing more about that.",
-      "I'm not sure I understand. Could you explain further?",
-      "I'm afraid I'm not interested, but thank you for calling."
-    ];
+    try {
+      this.currentResponses = await this.googleApiService.generateResponses(this.callContext);
+    } catch (error) {
+      console.error('Error generating responses:', error);
+      this.currentResponses = [
+        "I'm sorry, I'm having trouble generating a response. Could you please repeat that?",
+        "I apologize, but I didn't quite catch that. Could you rephrase?",
+        "I'm experiencing some technical difficulties. Could we try that again?"
+      ];
+    }
     this.state = State.WAITING_FOR_USER_CHOICE;
   }
 

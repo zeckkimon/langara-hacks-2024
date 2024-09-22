@@ -1,40 +1,40 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const axios = require('axios');
-const fs = require('fs').promises;
-const path = require('path');
-const { TextToSpeechClient } = require('@google-cloud/text-to-speech');
-require('dotenv').config();
+const axios = require("axios");
+const fs = require("fs").promises;
+const path = require("path");
+const { TextToSpeechClient } = require("@google-cloud/text-to-speech");
+require("dotenv").config();
 
 // Initialize Google Text-to-Speech client
 const ttsClient = new TextToSpeechClient({
-  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS
+  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
 });
 
 // File paths
-const USER_DATA_FILE = path.join(__dirname, '..', 'userData.json');
-const CHAT_CONTEXT_FILE = path.join(__dirname, '..', 'chatContext.json');
+const USER_DATA_FILE = path.join(__dirname, "..", "userData.json");
+const CHAT_CONTEXT_FILE = path.join(__dirname, "..", "chatContext.json");
 
 // Store active conversations
 const activeConversations = new Map();
 
 async function readUserData() {
   try {
-    const data = await fs.readFile(USER_DATA_FILE, 'utf8');
+    const data = await fs.readFile(USER_DATA_FILE, "utf8");
     return JSON.parse(data);
   } catch (error) {
-    console.error('Error reading user data:', error);
+    console.error("Error reading user data:", error);
     return null;
   }
 }
 
 async function readChatContext() {
   try {
-    const data = await fs.readFile(CHAT_CONTEXT_FILE, 'utf8');
+    const data = await fs.readFile(CHAT_CONTEXT_FILE, "utf8");
     return JSON.parse(data);
   } catch (error) {
-    console.error('Error reading chat context:', error);
-    return { context: '', historicalChoices: [] };
+    console.error("Error reading chat context:", error);
+    return { context: "", historicalChoices: [] };
   }
 }
 
@@ -42,15 +42,17 @@ async function writeChatContext(context) {
   try {
     await fs.writeFile(CHAT_CONTEXT_FILE, JSON.stringify(context, null, 2));
   } catch (error) {
-    console.error('Error writing chat context:', error);
+    console.error("Error writing chat context:", error);
   }
 }
 
 async function generateSuggestions(input, context, user) {
   const apiKey = process.env.OPENAI_API_KEY;
-  const url = 'https://api.openai.com/v1/chat/completions';
+  const url = "https://api.openai.com/v1/chat/completions";
 
-  const keywordPrompt = input.keywordInput ? `\nKeyword: ${input.keywordInput}` : '';
+  const keywordPrompt = input.keywordInput
+    ? `\nKeyword: ${input.keywordInput}`
+    : "";
 
   const prompt = `Given the following context:
 User Profile: Age ${user.age}, Location: ${user.location}, Language: ${user.language}
@@ -61,71 +63,87 @@ Generate 3 appropriate responses for the user, considering their profile, the ca
 and the keyword (if provided). Each response should be concise and easy to articulate.`;
 
   const postBody = {
-    model: 'gpt-3.5-turbo',
-    messages: [{ role: 'user', content: prompt }],
+    model: "gpt-3.5-turbo",
+    messages: [{ role: "user", content: prompt }],
     n: 1,
-    temperature: 0.7
+    temperature: 0.7,
   };
 
   const headers = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${apiKey}`
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${apiKey}`,
   };
 
   try {
     const response = await axios.post(url, postBody, { headers });
     const content = response.data.choices[0].message.content;
 
-    const suggestions = content.split('\n')
-      .filter(line => line.trim() !== '')
-      .map(line => line.replace(/^\d+\.\s*/, '').trim())
+    const suggestions = content
+      .split("\n")
+      .filter((line) => line.trim() !== "")
+      .map((line) => line.replace(/^\d+\.\s*/, "").trim())
       .slice(0, 3);
 
     return suggestions;
   } catch (error) {
-    console.error('Error calling OpenAI API:', error.response ? error.response.data : error.message);
-    throw new Error('Failed to generate suggestions from OpenAI');
+    console.error(
+      "Error calling OpenAI API:",
+      error.response ? error.response.data : error.message
+    );
+    throw new Error("Failed to generate suggestions from OpenAI");
   }
 }
 
 async function textToSpeech(text) {
   const request = {
     input: { text: text },
-    voice: { languageCode: 'en-US', ssmlGender: 'NEUTRAL' },
-    audioConfig: { audioEncoding: 'MP3' }
+    voice: { languageCode: "en-US", ssmlGender: "NEUTRAL" },
+    audioConfig: { audioEncoding: "MP3" },
   };
 
   try {
     const [response] = await ttsClient.synthesizeSpeech(request);
     return response.audioContent;
   } catch (error) {
-    console.error('Error generating speech:', error);
-    throw new Error('Failed to generate speech');
+    console.error("Error generating speech:", error);
+    throw new Error("Failed to generate speech");
   }
 }
 
 // Input: {}
 // Output: { id: string, name: string, age: number, location: string, language: string }
-router.get('/user-profile', async (req, res) => {
+router.get("/user-profile", async (req, res) => {
   try {
     const userData = await readUserData();
     if (!userData || !userData.users || userData.users.length === 0) {
-      return res.status(404).json({ error: 'User profile not found' });
+      return res.status(404).json({ error: "User profile not found" });
     }
     res.json(userData.users[0]); // Assuming single user for demo
   } catch (error) {
-    console.error('Error retrieving user profile:', error);
-    res.status(500).json({ error: 'Failed to retrieve user profile' });
+    console.error("Error retrieving user profile:", error);
+    res.status(500).json({ error: "Failed to retrieve user profile" });
+  }
+});
+
+// Input: {}
+// Output: { context: string, historicalChoices: [string, string, string] }
+router.get("/convo-history", async (req, res) => {
+  try {
+    const chatContext = await readChatContext();
+    res.json(chatContext);
+  } catch (error) {
+    console.error("Error retrieving chat context:", error);
+    res.status(500).json({ error: "Failed to retrieve chat context" });
   }
 });
 
 // Input: { userId: string, callerInput: string, keywordInput: string (optional) }
 // Output: { suggestions: [string, string, string] }
-router.post('/process-input', async (req, res) => {
-  const { userId, callerInput, keywordInput = '' } = req.body;
+router.post("/process-input", async (req, res) => {
+  const { userId, callerInput, keywordInput = "" } = req.body;
 
   if (!userId || (!callerInput && !keywordInput)) {
-    return res.status(400).json({ error: 'Missing userId or callerInput' });
+    return res.status(400).json({ error: "Missing userId or callerInput" });
   }
 
   let conversation = activeConversations.get(userId);
@@ -135,13 +153,15 @@ router.post('/process-input', async (req, res) => {
     const chatContext = await readChatContext();
 
     if (!userData || !userData.users || userData.users.length === 0) {
-      return res.status(404).json({ error: 'User profile not found' });
+      return res.status(404).json({ error: "User profile not found" });
     }
 
-    const userProfile = userData.users.find(user => user.id === userId);
+    const userProfile = userData.users.find((user) => user.id === userId);
 
     if (!userProfile) {
-      return res.status(404).json({ error: 'User profile not found for the given userId' });
+      return res
+        .status(404)
+        .json({ error: "User profile not found for the given userId" });
     }
 
     conversation = { userProfile, ...chatContext };
@@ -149,70 +169,82 @@ router.post('/process-input', async (req, res) => {
   }
 
   conversation.context += `\nCaller: ${callerInput}`;
-  await writeChatContext({ context: conversation.context, historicalChoices: conversation.historicalChoices });
+  await writeChatContext({
+    context: conversation.context,
+    historicalChoices: conversation.historicalChoices,
+  });
 
   try {
-    const suggestions = await generateSuggestions({ userId, callerInput, keywordInput }, conversation.context, conversation.userProfile);
+    const suggestions = await generateSuggestions(
+      { userId, callerInput, keywordInput },
+      conversation.context,
+      conversation.userProfile
+    );
 
     conversation.lastSuggestions = suggestions;
     res.json({ suggestions });
   } catch (error) {
-    console.error('Error generating suggestions:', error);
-    res.status(500).json({ error: 'Failed to generate suggestions' });
+    console.error("Error generating suggestions:", error);
+    res.status(500).json({ error: "Failed to generate suggestions" });
   }
 });
 
 // Input: { userId: string, chosenSuggestion: string }
 // Output: Audio file (MP3 format)
-router.post('/choose-suggestion', async (req, res) => {
+router.post("/choose-suggestion", async (req, res) => {
   const { userId, chosenSuggestion } = req.body;
 
   if (!userId || !chosenSuggestion) {
-    return res.status(400).json({ error: 'Missing userId or chosenSuggestion' });
+    return res
+      .status(400)
+      .json({ error: "Missing userId or chosenSuggestion" });
   }
 
   let conversation = activeConversations.get(userId);
 
   if (!conversation) {
-    return res.status(404).json({ error: 'Active conversation not found' });
+    return res.status(404).json({ error: "Active conversation not found" });
   }
 
   conversation.context += `\nAgent: ${chosenSuggestion}`;
   conversation.historicalChoices.push(chosenSuggestion);
-  await writeChatContext({ context: conversation.context, historicalChoices: conversation.historicalChoices });
+  await writeChatContext({
+    context: conversation.context,
+    historicalChoices: conversation.historicalChoices,
+  });
 
   try {
     const audioContent = await textToSpeech(chosenSuggestion);
 
     res.set({
-      'Content-Type': 'audio/mpeg',
-      'Content-Disposition': 'attachment; filename="response.mp3"',
+      "Content-Type": "audio/mpeg",
+      "Content-Disposition": 'attachment; filename="response.mp3"',
     });
 
-    res.send(Buffer.from(audioContent, 'binary'));
+    res.send(Buffer.from(audioContent, "binary"));
   } catch (error) {
-    console.error('Error during Text-to-Speech:', error);
-    res.status(500).json({ error: 'Failed to convert text to speech' });
+    console.error("Error during Text-to-Speech:", error);
+    res.status(500).json({ error: "Failed to convert text to speech" });
   }
 });
 
 // Input: { userId: string }
 // Output: { message: string }
-router.post('/end-call', async (req, res) => {
+router.post("/end-call", async (req, res) => {
   const { userId } = req.body;
 
   if (!userId) {
-    return res.status(400).json({ error: 'Missing userId' });
+    return res.status(400).json({ error: "Missing userId" });
   }
 
   activeConversations.delete(userId);
 
   try {
-    await writeChatContext({ context: '', historicalChoices: [] });
-    res.json({ message: 'Call ended and context cleared successfully' });
+    await writeChatContext({ context: "", historicalChoices: [] });
+    res.json({ message: "Call ended and context cleared successfully" });
   } catch (error) {
-    console.error('Error ending call:', error);
-    res.status(500).json({ error: 'Failed to end call and clear context' });
+    console.error("Error ending call:", error);
+    res.status(500).json({ error: "Failed to end call and clear context" });
   }
 });
 

@@ -1,17 +1,32 @@
-// import { useState } from "react";
+import { useState } from "react";
 
 import "./App.css";
 import Chat from "./Chat";
+import Header from "./Header";
+import UserProfile from "./UserProfile";
 // import SpeechToTextComponent from "./SpeechToText";
 
+const getCurrentPath = () => window.location.pathname;
+
 function App() {
-  // const [count, setCount] = useState(0);
+  const [currentPath, setCurrentPath] = useState(getCurrentPath());
+
+  window.onpopstate = () => {
+    setCurrentPath(getCurrentPath());
+  };
+
+  const navigate = (path) => {
+    window.history.pushState({}, "", path);
+    setCurrentPath(path);
+  };
 
   return (
     <>
-      <Chat />
-      <UserProfile />
+      <Header navigate={navigate} getCurrentPath={getCurrentPath} />
       {/* <SpeechToTextComponent /> */}
+
+      {(currentPath === "/" || currentPath === "/chat") && <Chat />}
+      {currentPath === "/profile" && <UserProfile />}
     </>
   );
 }

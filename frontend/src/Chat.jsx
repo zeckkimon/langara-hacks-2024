@@ -7,24 +7,31 @@ import {
   Paper,
   IconButton,
 } from "@mui/material";
-import { Send, Mic } from "@mui/icons-material";
+import { Mic } from "@mui/icons-material";
 import GraphicEqIcon from "@mui/icons-material/GraphicEq";
+import AssistantIcon from "@mui/icons-material/Assistant";
 
 const styles = {
-  container: {
-    display: "flex",
-    flexDirection: "column",
-    height: "100vh",
-  },
   messagesContainer: {
     flexGrow: 1,
     overflowY: "auto",
     padding: 2,
+    paddingTop: "75px",
+    paddingBottom: "150px",
   },
   inputContainer: {
     borderTop: 1,
     borderColor: "divider",
     padding: 2,
+    position: "fixed",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 999,
+    backgroundColor: "white",
+    margin: "0 auto",
+    maxWidth: "900px",
+    width: "95%",
   },
 };
 
@@ -36,6 +43,44 @@ const Chat = () => {
   const recognitionRef = useRef(null);
 
   const messages = [
+    {
+      sender: "Alice",
+      content: "Hey there! How are you doing?",
+      time: "10:00 AM",
+    },
+    {
+      sender: "You",
+      content: "Hi Alice! I'm doing great, thanks for asking. How about you?",
+      time: "10:05 AM",
+    },
+    {
+      sender: "Alice",
+      content:
+        "I'm good too! Just wanted to check in. Any plans for the weekend?",
+      time: "10:15 AM",
+    },
+    {
+      sender: "You",
+      content: "Not yet, but I'm thinking about going hiking. Want to join?",
+      time: "10:20 AM",
+    },
+    {
+      sender: "Alice",
+      content:
+        "That sounds fantastic! I'd love to join. Where are you planning to go?",
+      time: "10:25 AM",
+    },
+    {
+      sender: "You",
+      content:
+        "I was thinking about the trail in the nearby national park. It's beautiful this time of year. I was thinking about the trail in the nearby national park. It's beautiful this time of year.",
+      time: "10:28 AM",
+    },
+    {
+      sender: "Alice",
+      content: "Perfect! Let's do it. See you tomorrow!",
+      time: "10:30 AM",
+    },
     {
       sender: "Alice",
       content: "Hey there! How are you doing?",
@@ -109,7 +154,7 @@ const Chat = () => {
   };
 
   return (
-    <Box sx={styles.container}>
+    <>
       <Box sx={styles.messagesContainer}>
         {messages.map((msg, index) => (
           <Box
@@ -120,12 +165,13 @@ const Chat = () => {
               mb: 2,
             }}
           >
-            <Paper>
+            <Paper sx={{ maxWidth: "90%" }}>
               <Typography
                 variant="body1"
                 sx={{
                   backgroundColor: msg.sender === "You" ? "#f0f0f0" : "#e1f5fe",
                   p: 1,
+                  textAlign: "left",
                 }}
               >
                 {msg.content}
@@ -139,25 +185,37 @@ const Chat = () => {
           <TextField
             fullWidth
             variant="outlined"
-            placeholder="Type a message..."
+            placeholder="Type keywords..."
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             sx={{ mr: 1 }}
           />
-          <IconButton
-            color="primary"
-            sx={{ mr: 1 }}
-            onClick={recording ? stopRecording : startRecording}
-          >
-            {recording ? <GraphicEqIcon /> : <Mic />}
-          </IconButton>
-          {console.log(transcript)}
-          <Button variant="contained" endIcon={<Send />}>
+
+          <Button variant="contained" endIcon={<AssistantIcon />}>
             get suggestion
           </Button>
         </Box>
+        <IconButton
+          color="primary"
+          sx={{
+            mr: 1,
+            mt: 1,
+            width: "100%",
+            borderRadius: "4px",
+            border: 1,
+            bgcolor: recording ? "#FFCED5" : "white",
+            "&:hover": {
+              outline: "solid",
+              bgcolor: recording ? "#FFCED5" : "white",
+            },
+          }}
+          onClick={recording ? stopRecording : startRecording}
+        >
+          {recording ? <GraphicEqIcon /> : <Mic />}
+        </IconButton>
+        {console.log(transcript)}
       </Box>
-    </Box>
+    </>
   );
 };
 

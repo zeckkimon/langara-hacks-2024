@@ -1,4 +1,18 @@
 {
-  "context": "",
-  "historicalChoices": []
+  "context": "\nCaller: hello can you hear me\nAgent: Hello\nCaller: hello what's going on\nCaller: hello how are you\nCaller: actually I'm a color\nAgent: That's interesting, could you please clarify what you mean by saying you're a color?\nCaller: no I'm just saying\nAgent: \"Got it, feel free to share more about what you're calling about.\"\nCaller: hello hello this is Marcus Mike test\nAgent: \"Hello Marcus, it sounds like you're testing the line. Is there something specific you need help with?\"\nCaller: Mike test mic test\nCaller: Mike test mic test\nCaller: Mike dislike\nCaller: hello this is ABC Bank speaking how can I help you\nAgent: \"Hello, I would like to create a new account with ABC Bank. Can you assist me with that?\"\nCaller: hello this is langara Bank how can I help you today\nAgent: \"Hello, I'm interested in opening a new account with Langara Bank. Can you guide me through the process?\"\nCaller: hi how can I help you today\nAgent: \"Hello, feel free to ask any questions about our services or discuss opening a new account. I'm here to help!\"\nCaller: hello\nAgent: \"Hello, how can I assist you today?\"\nCaller: hello this is ABC punch how can I help you today\nAgent: \"Hello, as a 25-year-old in New York looking to open an account with ABC Punch, I'm here to guide you through the account opening process. How can I assist you today?\"\nCaller: I'm the bunker\nAgent: \"Hello, as a valued customer in New York, I'm here to assist you with any banking needs you may have. How can I help you today?\"\nCaller: \nCaller: hello hello\nAgent: \"Hello from New York! How can I help you with your banking needs?\"\nCaller: hi\nAgent: Hello! How can I assist you with your banking needs today?\nCaller: how can I help you\nAgent: I'm interested in opening a new account with ABC Punch. Can you guide me through the process?",
+  "historicalChoices": [
+    "Hello",
+    "That's interesting, could you please clarify what you mean by saying you're a color?",
+    "\"Got it, feel free to share more about what you're calling about.\"",
+    "\"Hello Marcus, it sounds like you're testing the line. Is there something specific you need help with?\"",
+    "\"Hello, I would like to create a new account with ABC Bank. Can you assist me with that?\"",
+    "\"Hello, I'm interested in opening a new account with Langara Bank. Can you guide me through the process?\"",
+    "\"Hello, feel free to ask any questions about our services or discuss opening a new account. I'm here to help!\"",
+    "\"Hello, how can I assist you today?\"",
+    "\"Hello, as a 25-year-old in New York looking to open an account with ABC Punch, I'm here to guide you through the account opening process. How can I assist you today?\"",
+    "\"Hello, as a valued customer in New York, I'm here to assist you with any banking needs you may have. How can I help you today?\"",
+    "\"Hello from New York! How can I help you with your banking needs?\"",
+    "Hello! How can I assist you with your banking needs today?",
+    "I'm interested in opening a new account with ABC Punch. Can you guide me through the process?"
+  ]
 }

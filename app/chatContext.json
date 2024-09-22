@@ -1,9 +1,4 @@
 {
-  "context": "\nCaller: I need help with my internet connection\nAgent: Let's start by checking if all your cables are properly connected.\nCaller: I need help with my internet connection\nAgent: Let's start by checking if all your cables are properly connected.\nCaller: I need help with my internet connection\nAgent: Let's start by checking if all your cables are properly connected.\nCaller: I need help with my internet connection\nAgent: Let's start by checking if all your cables are properly connected.\nCaller: Hello\nCaller: Hello\nCaller: Hello\nCaller: Hello\nCaller: Hello\nCaller: hello can you hear me",
-  "historicalChoices": [
-    "Let's start by checking if all your cables are properly connected.",
-    "Let's start by checking if all your cables are properly connected.",
-    "Let's start by checking if all your cables are properly connected.",
-    "Let's start by checking if all your cables are properly connected."
-  ]
+  "context": "",
+  "historicalChoices": []
 }

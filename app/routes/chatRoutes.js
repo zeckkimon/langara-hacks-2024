@@ -7,7 +7,9 @@ const { TextToSpeechClient } = require('@google-cloud/text-to-speech');
 require('dotenv').config();
 
 // Initialize Google Text-to-Speech client
-const ttsClient = new TextToSpeechClient();
+const ttsClient = new TextToSpeechClient({
+  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS
+});
 
 // File paths
 const USER_DATA_FILE = path.join(__dirname, '..', 'userData.json');
@@ -102,6 +104,8 @@ async function textToSpeech(text) {
   }
 }
 
+// Input: {}
+// Output: { id: string, name: string, age: number, location: string, language: string }
 router.get('/user-profile', async (req, res) => {
   try {
     const userData = await readUserData();
@@ -115,10 +119,12 @@ router.get('/user-profile', async (req, res) => {
   }
 });
 
+// Input: { userId: string, callerInput: string, keywordInput: string (optional) }
+// Output: { suggestions: [string, string, string] }
 router.post('/process-input', async (req, res) => {
   const { userId, callerInput, keywordInput = '' } = req.body;
 
-  if (!userId || !callerInput) {
+  if (!userId || (!callerInput && !keywordInput)) {
     return res.status(400).json({ error: 'Missing userId or callerInput' });
   }
 
@@ -156,6 +162,8 @@ router.post('/process-input', async (req, res) => {
   }
 });
 
+// Input: { userId: string, chosenSuggestion: string }
+// Output: Audio file (MP3 format)
 router.post('/choose-suggestion', async (req, res) => {
   const { userId, chosenSuggestion } = req.body;
 
@@ -188,6 +196,8 @@ router.post('/choose-suggestion', async (req, res) => {
   }
 });
 
+// Input: { userId: string }
+// Output: { message: string }
 router.post('/end-call', async (req, res) => {
   const { userId } = req.body;
 

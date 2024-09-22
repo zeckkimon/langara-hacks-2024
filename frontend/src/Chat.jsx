@@ -10,6 +10,8 @@ import {
 import { Mic } from "@mui/icons-material";
 import GraphicEqIcon from "@mui/icons-material/GraphicEq";
 import AssistantIcon from "@mui/icons-material/Assistant";
+import axios from "axios";
+// import { use } from "../../app/routes/chatRoutes";
 
 const styles = {
   messagesContainer: {
@@ -41,6 +43,9 @@ const Chat = () => {
   const [transcript, setTranscript] = useState("");
   const [recording, setRecording] = useState(false);
   const recognitionRef = useRef(null);
+
+  const [keywords, setKeywords] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
 
   const messages = [
     {
@@ -153,6 +158,22 @@ const Chat = () => {
     }
   };
 
+  const getSuggestions = async () => {
+    const res = await axios.post(
+      "http://localhost:3000/api/chat/process-input",
+      {
+        userId: "1",
+        callerInput: transcript,
+        keywordInput: keywords,
+      }
+    );
+
+    console.log(res.data);
+    setSuggestions(res.data.suggestions);
+  };
+
+  // const chooseSuggestion = (suggestion) => {};
+
   return (
     <>
       <Box sx={styles.messagesContainer}>
@@ -179,21 +200,38 @@ const Chat = () => {
             </Paper>
           </Box>
         ))}
+
+        {suggestions.map((suggestion, index) => (
+          <Box key={index}>
+            <Paper>
+              <Typography>{suggestion}</Typography>
+            </Paper>
+          </Box>
+        ))}
       </Box>
       <Box sx={styles.inputContainer}>
         <Box sx={{ display: "flex", alignItems: "center" }}>
+          {/* <form> */}
           <TextField
             fullWidth
             variant="outlined"
             placeholder="Type keywords..."
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={(e) => {
+              setMessage(e.target.value);
+              setKeywords(e.target.value);
+            }}
             sx={{ mr: 1 }}
           />
 
-          <Button variant="contained" endIcon={<AssistantIcon />}>
-            get suggestion
+          <Button
+            variant="contained"
+            endIcon={<AssistantIcon />}
+            onClick={getSuggestions}
+          >
+            get suggestions
           </Button>
+          {/* </form> */}
         </Box>
         <IconButton
           color="primary"

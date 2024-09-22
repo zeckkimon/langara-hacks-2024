@@ -2,6 +2,7 @@
 
 import "./App.css";
 import Chat from "./Chat";
+import Header from "./Header";
 // import SpeechToTextComponent from "./SpeechToText";
 
 function App() {
@@ -9,6 +10,7 @@ function App() {
 
   return (
     <>
+      <Header />
       <Chat />
       {/* <SpeechToTextComponent /> */}
     </>

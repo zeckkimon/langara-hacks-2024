@@ -12,11 +12,18 @@ import PermPhoneMsgIcon from "@mui/icons-material/PermPhoneMsg";
 import PersonIcon from "@mui/icons-material/Person";
 import { Typography } from "@mui/material";
 
-export default function Header() {
+export default function Header(props) {
+  // eslint-disable-next-line react/prop-types
+  const { navigate, getCurrentPath } = props;
   const [open, setOpen] = React.useState(false);
 
   const toggleDrawer = (newOpen) => () => {
     setOpen(newOpen);
+  };
+
+  const handleNavigation = (path) => {
+    navigate(path);
+    setOpen(false);
   };
 
   const DrawerList = (
@@ -26,12 +33,13 @@ export default function Header() {
       onClick={toggleDrawer(false)}
     >
       <List>
-        {["Chat", "Profile"].map((text, index) => (
+        {[
+          { text: "Chat", icon: <PermPhoneMsgIcon />, path: "/chat" },
+          { text: "Profile", icon: <PersonIcon />, path: "/profile" },
+        ].map(({ text, icon, path }) => (
           <ListItem key={text} disablePadding>
-            <ListItemButton>
-              <ListItemIcon>
-                {index % 2 === 0 ? <PermPhoneMsgIcon /> : <PersonIcon />}
-              </ListItemIcon>
+            <ListItemButton onClick={() => handleNavigation(path)}>
+              <ListItemIcon>{icon}</ListItemIcon>
               <ListItemText primary={text} />
             </ListItemButton>
           </ListItem>
@@ -48,8 +56,8 @@ export default function Header() {
           top: 0,
           left: 0,
           right: 0,
-          margin: "0 auto", // Center it horizontally
-          maxWidth: "800px",
+          margin: "0 auto",
+          maxWidth: "900px",
           width: "100vw",
           backgroundColor: "#F7F7F7",
           height: "60px",
@@ -63,7 +71,7 @@ export default function Header() {
           <MenuIcon />
         </Button>
         <Typography variant="h5" sx={{ lineHeight: "60px" }}>
-          Phone Call Chat
+          {getCurrentPath() === "/profile" ? "Profile" : "Phone Call Chat"}
         </Typography>
       </header>
       <Drawer open={open} onClose={toggleDrawer(false)}>

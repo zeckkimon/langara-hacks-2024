@@ -1,15 +1,24 @@
-import React, { useState } from 'react';
-import { TextField, Button, MenuItem, Select, InputLabel, FormControl, Box, Typography } from '@mui/material';
+import { useState } from "react";
+import {
+  TextField,
+  Button,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+  Box,
+  Typography,
+} from "@mui/material";
 
 const UserProfile = () => {
   const [profile, setProfile] = useState({
-    age: '',
-    location: '',
-    language: '',
-    responses: []
+    age: "",
+    location: "",
+    language: "",
+    responses: [],
   });
 
-  const [currentResponse, setCurrentResponse] = useState('');
+  const [currentResponse, setCurrentResponse] = useState("");
   const [callEnded, setCallEnded] = useState(false);
 
   // Handle input change for profile
@@ -31,24 +40,26 @@ const UserProfile = () => {
       ...prevProfile,
       responses: [...prevProfile.responses, currentResponse],
     }));
-    setCurrentResponse(''); // Clear the current response input
+    setCurrentResponse(""); // Clear the current response input
   };
 
   // End call and clear profile
   const endCall = () => {
-    console.log('Profile data:', profile);
+    console.log("Profile data:", profile);
     setCallEnded(true);
     setProfile({
-      age: '',
-      location: '',
-      language: '',
-      responses: []
+      age: "",
+      location: "",
+      language: "",
+      responses: [],
     });
   };
 
   return (
-    <Box sx={{ width: '400px', margin: 'auto', padding: '20px'}}>
-      <Typography variant="h4" gutterBottom>User Profile</Typography>
+    <Box sx={{ width: "400px", margin: "auto", padding: "20px" }}>
+      <Typography variant="h4" gutterBottom>
+        User Profile
+      </Typography>
       {!callEnded ? (
         <form>
           <TextField
@@ -85,7 +96,9 @@ const UserProfile = () => {
             </Select>
           </FormControl>
 
-          <Typography variant="h6" gutterBottom>Responses</Typography>
+          <Typography variant="h6" gutterBottom>
+            Responses
+          </Typography>
           <TextField
             label="Enter response"
             value={currentResponse}
@@ -108,15 +121,19 @@ const UserProfile = () => {
             variant="contained"
             color="secondary"
             onClick={endCall}
-            sx={{ marginTop: '20px' }}
+            sx={{ marginTop: "20px" }}
           >
             End Call
           </Button>
         </form>
       ) : (
         <Box>
-          <Typography variant="h5" gutterBottom>Call Ended</Typography>
-          <Typography variant="body1">The user profile and responses have been cleared.</Typography>
+          <Typography variant="h5" gutterBottom>
+            Call Ended
+          </Typography>
+          <Typography variant="body1">
+            The user profile and responses have been cleared.
+          </Typography>
         </Box>
       )}
     </Box>

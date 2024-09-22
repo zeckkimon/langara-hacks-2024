@@ -29,8 +29,8 @@ const styles = {
     right: 0,
     zIndex: 999,
     backgroundColor: "white",
-    margin: "0 auto", // Center within the outer container
-    maxWidth: "800px", // Match the max width of the container
+    margin: "0 auto",
+    maxWidth: "900px",
     width: "95%",
   },
 };

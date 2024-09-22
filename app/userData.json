@@ -1,0 +1,10 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "age": 25,
+      "location": "New York",
+      "language": "English"
+    }
+  ]
+}

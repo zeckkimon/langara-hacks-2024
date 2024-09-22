@@ -1,124 +1,103 @@
 const express = require('express');
 const router = express.Router();
-const fs = require('fs').promises;
-const path = require('path');
 const axios = require('axios');
-
-const usersFilePath = path.join(__dirname, '../../data/users.json');
-
-const State = {
-  WAITING_FOR_CALLER_INPUT: 0,
-  GENERATING_RESPONSES: 1,
-  WAITING_FOR_USER_CHOICE: 2,
-  PREPARING_SPEECH_OUTPUT: 3
-};
-
-class ResponseGenerator {
-  constructor(userProfile) {
-    this.userProfile = userProfile;
-    this.conversationHistory = [];
-    this.state = State.WAITING_FOR_CALLER_INPUT;
-    this.currentResponses = [];
-    this.callContext = "";
-    this.currentOutput = "";
-  }
-
-  async processCallerInput(callerInput) {
-    this.callContext += `\nCaller: ${callerInput}`;
-    this.state = State.GENERATING_RESPONSES;
-    return await this.generateResponses();
-  }
-
-  async generateResponses() {
-    try {
-      this.currentResponses = await generateSuggestions(this.callContext, this.userProfile);
-      this.state = State.WAITING_FOR_USER_CHOICE;
-      return this.currentResponses;
-    } catch (error) {
-      console.error('Error generating responses:', error);
-      this.currentResponses = [
-        "I'm sorry, I'm having trouble generating a response. Could you please repeat that?",
-        "I apologize, but I didn't quite catch that. Could you rephrase?",
-        "I'm experiencing some technical difficulties. Could we try that again?"
-      ];
-      return this.currentResponses;
-    }
-  }
-
-  async processUserChoice(choice) {
-    if (choice >= 1 && choice <= 3) {
-      this.currentOutput = this.currentResponses[choice - 1];
-    } else if (choice === 4) {
-      // For custom response, we'll need to handle this differently in the route
-      this.currentOutput = "Custom response placeholder";
-    } else {
-      throw new Error("Invalid choice");
-    }
-    this.state = State.PREPARING_SPEECH_OUTPUT;
-    return this.prepareSpeechOutput();
-  }
-
-  async prepareSpeechOutput() {
-    this.conversationHistory.push(this.currentOutput);
-    this.state = State.WAITING_FOR_CALLER_INPUT;
-    return this.currentOutput;
-  }
-}
+require('dotenv').config();
 
 // Store active conversations
 const activeConversations = new Map();
 
-router.post('/start-call', async (req, res) => {
+/**
+ * Start a new call
+ * Expected input:
+ * {
+ *   userId: string,
+ *   userProfile: {
+ *     age: number,
+ *     location: string,
+ *     language: string
+ *   }
+ * }
+ */
+router.post('/start-call', (req, res) => {
+  const { userId, userProfile } = req.body;
+  if (!userId || !userProfile) {
+    return res.status(400).json({ error: 'Missing userId or userProfile' });
+  }
+  activeConversations.set(userId, { userProfile, context: '' });
+  res.json({ message: "Call started", userId });
+});
+
+/**
+ * Process caller input and generate suggestions
+ * Expected input:
+ * {
+ *   userId: string,
+ *   callerInput: string
+ * }
+ */
+router.post('/process-input', async (req, res) => {
+  const { userId, callerInput } = req.body;
+  if (!userId || !callerInput) {
+    return res.status(400).json({ error: 'Missing userId or callerInput' });
+  }
+
+  const conversation = activeConversations.get(userId);
+  if (!conversation) {
+    return res.status(404).json({ error: 'No active call found for this user' });
+  }
+
+  conversation.context += `\nCaller: ${callerInput}`;
+  
   try {
-    const { userId } = req.body;
-    const data = await fs.readFile(usersFilePath, 'utf8');
-    const users = JSON.parse(data).users;
-    const user = users.find(u => u.id === userId);
-    if (!user) throw new Error('User not found');
-
-    const generator = new ResponseGenerator(user);
-    activeConversations.set(userId, generator);
-
-    res.json({ message: "Call started", userId });
+    const suggestions = await generateSuggestions(conversation.context, conversation.userProfile);
+    res.json({ suggestions });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('Error generating suggestions:', error);
+    res.status(500).json({ error: 'Failed to generate suggestions' });
   }
 });
 
-router.post('/process-call', async (req, res) => {
-  try {
-    const { userId, transcribedText } = req.body;
-    const generator = activeConversations.get(userId);
-    if (!generator) throw new Error('No active call found for this user');
-
-    const responses = await generator.processCallerInput(transcribedText);
-    res.json({ suggestions: responses });
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+/**
+ * Record user's chosen response
+ * Expected input:
+ * {
+ *   userId: string,
+ *   chosenResponse: string
+ * }
+ */
+router.post('/user-choice', (req, res) => {
+  const { userId, chosenResponse } = req.body;
+  if (!userId || !chosenResponse) {
+    return res.status(400).json({ error: 'Missing userId or chosenResponse' });
   }
+
+  const conversation = activeConversations.get(userId);
+  if (!conversation) {
+    return res.status(404).json({ error: 'No active call found for this user' });
+  }
+
+  conversation.context += `\nUser: ${chosenResponse}`;
+  conversation.userProfile.historicalChoices = conversation.userProfile.historicalChoices || [];
+  conversation.userProfile.historicalChoices.push(chosenResponse);
+
+  res.json({ message: 'Response recorded' });
 });
 
-router.post('/user-choice', async (req, res) => {
-  try {
-    const { userId, choice } = req.body;
-    const generator = activeConversations.get(userId);
-    if (!generator) throw new Error('No active call found for this user');
-
-    const output = await generator.processUserChoice(choice);
-    res.json({ output });
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+/**
+ * End the call
+ * Expected input:
+ * {
+ *   userId: string
+ * }
+ */
+router.post('/end-call', (req, res) => {
+  const { userId } = req.body;
+  if (!userId) {
+    return res.status(400).json({ error: 'Missing userId' });
   }
-});
 
-router.post('/end-call', async (req, res) => {
-  try {
-    const { userId } = req.body;
-    activeConversations.delete(userId);
-    res.json({ message: "Call ended" });
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
+  activeConversations.delete(userId);
+  res.json({ message: "Call ended" });
 });
 
 async function generateSuggestions(context, user) {
@@ -127,15 +106,16 @@ async function generateSuggestions(context, user) {
 
   const prompt = `Given the following context:
     User Profile: Age ${user.age}, Location: ${user.location}, Language: ${user.language}
-    Historical Choices: ${user.historicalChoices.join(', ')}
+    Historical Choices: ${user.historicalChoices ? user.historicalChoices.join(', ') : 'None'}
     Call Context: ${context}
 
-    Generate 3 appropriate responses for the user with a stutter, considering their profile and the call context. Each response should be concise and easy to articulate.`;
+    Generate 3 appropriate responses for the user, considering their profile and the call context. Each response should be concise and easy to articulate.`;
 
   const postBody = {
     model: 'gpt-3.5-turbo',
     messages: [{ role: 'user', content: prompt }],
-    n: 3
+    n: 1,
+    temperature: 0.7
   };
 
   const headers = {
@@ -145,10 +125,11 @@ async function generateSuggestions(context, user) {
 
   try {
     const response = await axios.post(url, postBody, { headers });
-    return response.data.choices.map(choice => choice.message.content.trim());
+    const content = response.data.choices[0].message.content;
+    return content.split('\n').filter(line => line.trim() !== '').map(line => line.replace(/^\d+\.\s*/, '').trim());
   } catch (error) {
-    console.error('Error generating suggestions:', error);
-    throw new Error('Failed to generate suggestions');
+    console.error('Error calling OpenAI API:', error);
+    throw new Error('Failed to generate suggestions from OpenAI');
   }
 }
 

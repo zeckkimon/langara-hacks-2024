@@ -34,7 +34,11 @@ export default function Header(props) {
     >
       <List>
         {[
-          { text: "Chat", icon: <PermPhoneMsgIcon />, path: "/chat" },
+          {
+            text: "Phone Call Chat",
+            icon: <PermPhoneMsgIcon />,
+            path: "/chat",
+          },
           { text: "Profile", icon: <PersonIcon />, path: "/profile" },
         ].map(({ text, icon, path }) => (
           <ListItem key={text} disablePadding>

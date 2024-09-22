@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -48,96 +48,27 @@ const Chat = () => {
 
   const [keywords, setKeywords] = useState("");
   const [suggestions, setSuggestions] = useState([]);
-  const [messages, setMessages] = useState([
-    {
-      sender: "Caller",
-      content: "Hey there! How are you doing?",
-    },
-    {
-      sender: "Agent",
-      content:
-        "Hi Caller! I'm doing great, thanks for asking. How about you? Hi Caller! I'm doing great, thanks for asking. How about you? Hi Caller! I'm doing great, thanks for asking. How about you?",
-    },
-  ]);
+  const [messages, setMessages] = useState([]);
 
-  // const messages = [
-  //   {
-  //     sender: "Caller",
-  //     content: "Hey there! How are you doing?",
-  //     time: "10:00 AM",
-  //   },
-  //   {
-  //     sender: "Agent",
-  //     content: "Hi Caller! I'm doing great, thanks for asking. How about you?",
-  //     time: "10:05 AM",
-  //   },
-  //   {
-  //     sender: "Caller",
-  //     content:
-  //       "I'm good too! Just wanted to check in. Any plans for the weekend?",
-  //     time: "10:15 AM",
-  //   },
-  //   {
-  //     sender: "Agent",
-  //     content: "Not yet, but I'm thinking about going hiking. Want to join?",
-  //     time: "10:20 AM",
-  //   },
-  //   {
-  //     sender: "Caller",
-  //     content:
-  //       "That sounds fantastic! I'd love to join. Where are you planning to go?",
-  //     time: "10:25 AM",
-  //   },
-  //   {
-  //     sender: "Agent",
-  //     content:
-  //       "I was thinking about the trail in the nearby national park. It's beautiful this time of year. I was thinking about the trail in the nearby national park. It's beautiful this time of year.",
-  //     time: "10:28 AM",
-  //   },
-  //   {
-  //     sender: "Caller",
-  //     content: "Perfect! Let's do it. See you tomorrow!",
-  //     time: "10:30 AM",
-  //   },
-  //   {
-  //     sender: "Caller",
-  //     content: "Hey there! How are you doing?",
-  //     time: "10:00 AM",
-  //   },
-  //   {
-  //     sender: "Agent",
-  //     content: "Hi Caller! I'm doing great, thanks for asking. How about you?",
-  //     time: "10:05 AM",
-  //   },
-  //   {
-  //     sender: "Caller",
-  //     content:
-  //       "I'm good too! Just wanted to check in. Any plans for the weekend?",
-  //     time: "10:15 AM",
-  //   },
-  //   {
-  //     sender: "Agent",
-  //     content: "Not yet, but I'm thinking about going hiking. Want to join?",
-  //     time: "10:20 AM",
-  //   },
-  //   {
-  //     sender: "Caller",
-  //     content:
-  //       "That sounds fantastic! I'd love to join. Where are you planning to go?",
-  //     time: "10:25 AM",
-  //   },
-  //   {
-  //     sender: "Agent",
-  //     content:
-  //       "I was thinking about the trail in the nearby national park. It's beautiful this time of year. I was thinking about the trail in the nearby national park. It's beautiful this time of year.",
-  //     time: "10:28 AM",
-  //   },
-  //   {
-  //     sender: "Caller",
-  //     content: "Perfect! Let's do it. See you tomorrow!",
-  //     time: "10:30 AM",
-  //   },
-  // ];
+  useEffect(() => {
+    (async () => {
+      const res = await axios.get(
+        "http://localhost:3000/api/chat/convo-history"
+      );
+      console.log(res.data);
+      if (res.data.context) {
+        const arr = res.data.context.split("\n");
+        arr.shift();
+        const arrMapped = arr.map((line) => {
+          const sender = line.split(":")[0];
+          const content = line.split(":")[1];
+          return { sender, content };
+        });
+        console.log(arrMapped);
+        setMessages(arrMapped);
+      }
+    })();
+  }, []);
 
   const startRecording = () => {
     if (window.SpeechRecognition || window.webkitSpeechRecognition) {

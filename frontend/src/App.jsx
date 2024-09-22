@@ -12,6 +12,7 @@ function App() {
     <>
       <Header />
       <Chat />
+      <UserProfile />
       {/* <SpeechToTextComponent /> */}
     </>
   );
